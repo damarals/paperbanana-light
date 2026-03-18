@@ -13,7 +13,7 @@
 # limitations under the License.
 
 """
-Parallel Streamlit Demo for PaperVizAgent
+Parallel Streamlit Demo for PaperBanana
 Accepts user text input, duplicates it 10 times, and runs parallel processing
 to generate multiple diagram candidates for comparison.
 """
@@ -80,7 +80,7 @@ except Exception as e:
 
 st.set_page_config(
     layout="wide",
-    page_title="PaperVizAgent Parallel Demo",
+    page_title="PaperBanana Parallel Demo",
     page_icon="🍌"
 )
 
@@ -409,7 +409,7 @@ def display_candidate_result(result, candidate_id, exp_mode):
                 st.info("No description available")
 
 def main():
-    st.title("🍌 PaperVizAgent Demo")
+    st.title("🍌 PaperBanana Demo")
     st.markdown("AI-powered scientific diagram generation and refinement")
     
     # Create tabs
@@ -524,9 +524,9 @@ def main():
         st.markdown("## 📝 Input")
         
         # Example content
-        example_method = r"""## Methodology: The PaperVizAgent Framework
+        example_method = r"""## Methodology: The PaperBanana Framework
         
-        In this section, we present the architecture of PaperVizAgent, a reference-driven agentic framework for automated academic illustration. As illustrated in Figure \ref{fig:methodology_diagram}, PaperVizAgent orchestrates a collaborative team of five specialized agents—Retriever, Planner, Stylist, Visualizer, and Critic—to transform raw scientific content into publication-quality diagrams and plots. (See Appendix \ref{app_sec:agent_prompts} for prompts)
+        In this section, we present the architecture of PaperBanana, a reference-driven agentic framework for automated academic illustration. As illustrated in Figure \ref{fig:methodology_diagram}, PaperBanana orchestrates a collaborative team of five specialized agents—Retriever, Planner, Stylist, Visualizer, and Critic—to transform raw scientific content into publication-quality diagrams and plots. (See Appendix \ref{app_sec:agent_prompts} for prompts)
 
 ### Retriever Agent
 
@@ -574,7 +574,7 @@ This revised description is then fed back to the Visualizer for regeneration. Th
 
 The framework extends to statistical plots by adjusting the Visualizer and Critic agents. For numerical precision, the Visualizer converts the description $P_t$ into executable Python Matplotlib code: $I_t = \text{VLM}_{\text{code}}(P_t)$. The Critic evaluates the rendered plot and generates a refined description $P_{t+1}$ addressing inaccuracies or imperfections: $P_{t+1} = \text{VLM}_{\text{critic}}(I_t, S, C, P_t)$. The same $T=3$ round iterative refinement process applies. While we prioritize this code-based approach for accuracy, we also explore direct image generation in Section \ref{sec:discussion}. See Appendix \ref{app_sec:plot_agent_prompt} for adjusted prompts."""
 
-        example_caption = "Figure 1: Overview of our PaperVizAgent framework. Given the source context and communicative intent, we first apply a Linear Planning Phase to retrieve relevant reference examples and synthesize a stylistically optimized description. We then use an Iterative Refinement Loop (consisting of Visualizer and Critic agents) to transform the description into visual output and conduct multi-round refinements to produce the final academic illustration."
+        example_caption = "Figure 1: Overview of our PaperBanana framework. Given the source context and communicative intent, we first apply a Linear Planning Phase to retrieve relevant reference examples and synthesize a stylistically optimized description. We then use an Iterative Refinement Loop (consisting of Visualizer and Critic agents) to transform the description into visual output and conduct multi-round refinements to produce the final academic illustration."
         
         col_input1, col_input2 = st.columns([3, 2])
         
@@ -582,12 +582,12 @@ The framework extends to statistical plots by adjusting the Visualizer and Criti
             # Example selector for method content
             method_example = st.selectbox(
                 "Load Example (Method)",
-                ["None", "PaperVizAgent Framework"],
+                ["None", "PaperBanana Framework"],
                 key="method_example_selector"
             )
             
             # Set value based on example selection or session state
-            if method_example == "PaperVizAgent Framework":
+            if method_example == "PaperBanana Framework":
                 method_value = example_method
             else:
                 method_value = st.session_state.get("method_content", "")
@@ -604,12 +604,12 @@ The framework extends to statistical plots by adjusting the Visualizer and Criti
             # Example selector for caption
             caption_example = st.selectbox(
                 "Load Example (Caption)",
-                ["None", "PaperVizAgent Framework"],
+                ["None", "PaperBanana Framework"],
                 key="caption_example_selector"
             )
             
             # Set value based on example selection or session state
-            if caption_example == "PaperVizAgent Framework":
+            if caption_example == "PaperBanana Framework":
                 caption_value = example_caption
             else:
                 caption_value = st.session_state.get("caption", "")
@@ -765,7 +765,7 @@ The framework extends to statistical plots by adjusting the Visualizer and Criti
                 st.download_button(
                     label="⬇️ Download ZIP",
                     data=zip_buffer.getvalue(),
-                    file_name=f"papervizagent_candidates_{datetime.now().strftime('%Y%m%d_%H%M%S')}.zip",
+                    file_name=f"paperbanana_candidates_{datetime.now().strftime('%Y%m%d_%H%M%S')}.zip",
                     mime="application/zip",
                     use_container_width=True
                 )
