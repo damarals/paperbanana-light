@@ -160,6 +160,15 @@
       "contributions": [
         "ideas"
       ]
+    },
+    {
+      "login": "shenyimings",
+      "name": "Yiming Shen",
+      "avatar_url": "https://avatars.githubusercontent.com/u/89332218?v=4",
+      "profile": "http://sites.google.com/view/yiming-shen",
+      "contributions": [
+        "code"
+      ]
     }
   ],
   "commitType": "docs"
