@@ -1,3 +1,3 @@
-# PaperBanana v2
+# PaperBanana *Light*
 
-PaperBanana v2 — Academic figure generation with Agno agents
+PaperBanana *Light* — Academic figure generation with Agno agents

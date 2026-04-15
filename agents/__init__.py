@@ -1,1 +1,1 @@
-"""PaperBanana v2 agent modules."""
+"""PaperBanana Light agent modules."""
