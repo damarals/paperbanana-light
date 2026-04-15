@@ -12,8 +12,7 @@ dependencies = [
     "pydantic",
     "python-dotenv",
     "pyyaml",
-    "json-repair",
 ]
 
 [tool.setuptools.packages.find]
-include = ["agents*", "retriever*", "eval*"]
+include = ["agents*", "retriever*"]

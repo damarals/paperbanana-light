@@ -5,7 +5,7 @@ from pathlib import Path
 
 from agno.models.google import Gemini
 
-_CFG_PATH = Path(__file__).resolve().parent.parent / "configs" / "models.yaml"
+_CFG_PATH = Path(__file__).resolve().parent.parent / "models.yaml"
 
 
 def load_models() -> dict:

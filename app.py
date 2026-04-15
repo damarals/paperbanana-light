@@ -295,16 +295,13 @@ app.layout = html.Div(children=[
 
 _background_results: dict[str, dict] = {}
 
-PIPELINE_MODE = "demo_full"
-TASK_TYPE = "diagram"
-
 
 def _extract_final_image(result: dict) -> str | None:
     for r in range(5, -1, -1):
-        key = f"target_diagram_critic_desc{r}_base64_jpg"
+        key = f"critic_image_{r}"
         if key in result and result[key]:
             return result[key]
-    return result.get("target_diagram_stylist_desc0_base64_jpg")
+    return result.get("stylist_image")
 
 
 def _run_generation(api_key, aspect_ratio, num_candidates, max_critic_rounds,
@@ -313,7 +310,6 @@ def _run_generation(api_key, aspect_ratio, num_candidates, max_critic_rounds,
 
     data_list = [
         {
-            "task_name": TASK_TYPE,
             "content": method_content,
             "visual_intent": figure_caption,
             "filename": f"candidate_{i}",
@@ -324,7 +320,7 @@ def _run_generation(api_key, aspect_ratio, num_candidates, max_critic_rounds,
 
     async def _go():
         images = []
-        async for result in run_batch(data_list, mode=PIPELINE_MODE, api_key=api_key,
+        async for result in run_batch(data_list, api_key=api_key,
                                       max_critic_rounds=max_critic_rounds):
             img = _extract_final_image(result)
             if img:

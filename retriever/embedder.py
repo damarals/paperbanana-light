@@ -18,15 +18,15 @@ EMBEDDING_MODEL = "gemini-embedding-2-preview"
 BATCH_SIZE = 50
 
 
-def _load_references(task_name: str) -> list[dict]:
-    ref_path = DATA_DIR / task_name / "ref.json"
+def _load_references() -> list[dict]:
+    ref_path = DATA_DIR / "diagram" / "ref.json"
     with open(ref_path) as f:
         return json.load(f)
 
 
-def _get_collection(task_name: str) -> chromadb.Collection:
+def _get_collection() -> chromadb.Collection:
     client = chromadb.PersistentClient(path=str(INDEX_DIR))
-    return client.get_or_create_collection(name=f"{task_name}_references")
+    return client.get_or_create_collection(name="diagram_references")
 
 
 def _embed_texts(texts: list[str], api_key: str) -> list[list[float]]:
@@ -43,21 +43,21 @@ def _embed_texts(texts: list[str], api_key: str) -> list[list[float]]:
     return all_embeddings
 
 
-def index_references(task_name: str, api_key: str) -> None:
+def index_references(api_key: str) -> None:
     """Build ChromaDB index from reference embeddings.
 
     Skips if the collection already has the expected number of documents.
     """
-    refs = _load_references(task_name)
-    collection = _get_collection(task_name)
+    refs = _load_references()
+    collection = _get_collection()
 
     if collection.count() == len(refs):
-        print(f"[retriever] {task_name}: index already exists ({len(refs)} docs), skipping")
+        print(f"[retriever] index already exists ({len(refs)} docs), skipping")
         return
 
     texts = [f"{r['content']} {r['visual_intent']}" for r in refs]
 
-    print(f"[retriever] {task_name}: embedding {len(texts)} references...")
+    print(f"[retriever] embedding {len(texts)} references...")
     embeddings = _embed_texts(texts, api_key)
 
     ids = [r["id"] for r in refs]
@@ -78,22 +78,21 @@ def index_references(task_name: str, api_key: str) -> None:
             embeddings=embeddings[i:batch_end],
             metadatas=metadatas[i:batch_end],
         )
-        print(f"[retriever] {task_name}: indexed {batch_end}/{len(ids)}")
+        print(f"[retriever] indexed {batch_end}/{len(ids)}")
 
-    print(f"[retriever] {task_name}: indexing complete")
+    print("[retriever] indexing complete")
 
 
 def search(
-    task_name: str,
     query_text: str,
     api_key: str,
     top_k: int = 10,
 ) -> list[dict]:
     """Find the most similar references to query_text."""
-    collection = _get_collection(task_name)
+    collection = _get_collection()
     if collection.count() == 0:
         raise RuntimeError(
-            f"Index for '{task_name}' is empty. Call index_references() first."
+            "Index is empty. Call index_references() first."
         )
 
     query_embedding = _embed_texts([query_text], api_key)[0]
@@ -103,7 +102,7 @@ def search(
         n_results=min(top_k, collection.count()),
     )
 
-    refs_by_id = {r["id"]: r for r in _load_references(task_name)}
+    refs_by_id = {r["id"]: r for r in _load_references()}
 
     matches = []
     for i, ref_id in enumerate(results["ids"][0]):
@@ -120,6 +119,6 @@ def search(
     return matches
 
 
-def ensure_index(task_name: str, api_key: str) -> None:
+def ensure_index(api_key: str) -> None:
     """Build the index if it doesn't already exist."""
-    index_references(task_name, api_key)
+    index_references(api_key)

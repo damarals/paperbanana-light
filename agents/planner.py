@@ -5,6 +5,8 @@ import json
 from typing import Optional
 
 from agno.agent import Agent
+from agno.media import Image
+from agno.models.google import Gemini
 
 from agents.config import load_models
 
@@ -16,22 +18,7 @@ To help you understand the task better, and grasp the principles for generating 
 ** IMPORTANT: **
 Your description should be as detailed as possible. Semantically, clearly describe each element and their connections. Formally, include various details such as background style (typically pure white or very light pastel), colors, line thickness, icon styles, etc. Remember: vague or unclear specifications will only make the generated figure worse, not better."""
 
-PLOT_PLANNER_SYSTEM_PROMPT = """\
-I am working on a task: given the raw data (typically in tabular or json format) and a visual intent of the desired plot, automatically generate a corresponding statistical plot that are both accurate and aesthetically pleasing. I will input the raw data and the plot visual intent, and your output should be a detailed description of an illustrative plot that effectively represents the data.  Note that your description should include all the raw data points to be plotted.
-
-To help you understand the task better, and grasp the principles for generating such plots, I will also provide you with several examples. You should learn from these examples to provide your plot description.
-
-** IMPORTANT: **
-Your description should be as detailed as possible. For content, explain the precise mapping of variables to visual channels (x, y, hue) and explicitly enumerate every raw data point's coordinate to be drawn to ensure accuracy. For presentation, specify the exact aesthetic parameters, including specific HEX color codes, font sizes for all labels, line widths, marker dimensions, legend placement, and grid styles. You should learn from the examples' content presentation and aesthetic design (e.g., color schemes)."""
-
-_CONTENT_LABELS = {
-    "diagram": ("Methodology Section", "Diagram Caption"),
-    "plot": ("Plot Raw Data", "Visual Intent of the Desired Plot"),
-}
-
-
 async def run(
-    task_name: str,
     content: str,
     visual_intent: str,
     examples: Optional[list[dict]] = None,
@@ -40,46 +27,39 @@ async def run(
     """Generate a detailed figure description using few-shot examples.
 
     Args:
-        task_name: "diagram" or "plot"
-        content: methodology text or raw data
-        visual_intent: caption or plot intent
+        content: methodology text
+        visual_intent: diagram caption
         examples: list of dicts with keys: content, visual_intent, image_base64 (optional)
         api_key: Gemini API key (passed via model config if needed)
 
     Returns:
         Detailed description string.
     """
-    system_prompt = (
-        DIAGRAM_PLANNER_SYSTEM_PROMPT if task_name == "diagram"
-        else PLOT_PLANNER_SYSTEM_PROMPT
-    )
-    content_label, intent_label = _CONTENT_LABELS[task_name]
+    content_label = "Methodology Section"
+    intent_label = "Diagram Caption"
 
     if isinstance(content, (dict, list)):
         content = json.dumps(content)
 
-    # Build multimodal prompt with few-shot examples
-    user_parts: list[dict] = []
+    # Build text prompt with few-shot examples; collect images separately
+    text_parts: list[str] = []
+    images: list[Image] = []
     for idx, ex in enumerate(examples or []):
         ex_content = ex["content"]
         if isinstance(ex_content, (dict, list)):
             ex_content = json.dumps(ex_content)
 
-        text = (
+        text_parts.append(
             f"Example {idx + 1}:\n"
             f"{content_label}: {ex_content}\n"
             f"{intent_label}: {ex['visual_intent']}\n"
-            f"Reference {task_name.capitalize()}: "
+            f"Reference Diagram:"
         )
-        user_parts.append({"type": "text", "text": text})
 
         if ex.get("image_base64"):
-            user_parts.append({
-                "type": "image_url",
-                "image_url": {
-                    "url": f"data:image/jpeg;base64,{ex['image_base64']}",
-                },
-            })
+            images.append(
+                Image(content=base64.b64decode(ex["image_base64"]), format="jpeg")
+            )
 
     # Target query
     query_text = (
@@ -89,17 +69,16 @@ async def run(
         f"{content_label}: {content}\n"
         f"{intent_label}: {visual_intent}\n"
         f"Detailed description of the target figure to be generated"
+        f" (do not include figure titles):"
     )
-    if task_name == "diagram":
-        query_text += " (do not include figure titles)"
-    query_text += ":"
-    user_parts.append({"type": "text", "text": query_text})
+    text_parts.append(query_text)
+    user_prompt = "\n".join(text_parts)
 
-    models = load_models()
+    model: Gemini = load_models()["planner"]
+    model.temperature = 1.0
     agent = Agent(
-        model=models["planner"],
-        system_prompt=system_prompt,
-        temperature=1.0,
+        model=model,
+        system_message=DIAGRAM_PLANNER_SYSTEM_PROMPT,
     )
-    response = await agent.arun(message=user_parts)
+    response = await agent.arun(input=user_prompt, images=images or None)
     return response.content.strip()

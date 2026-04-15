@@ -1,8 +1,21 @@
-configs/model_config.yaml
+# Python
 __pycache__/
-*.pyc
-*.pyc
-__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+*.egg
+dist/
+build/
+*.whl
+
+# Virtual environments
 .venv/
+venv/
+env/
+
+# Environment variables
+.env
+
+# Project-specific
+retriever/index/
 data/
-results/
