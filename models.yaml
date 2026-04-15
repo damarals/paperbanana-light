@@ -6,6 +6,8 @@ visualizer:
   model: gemini-3.1-flash-image-preview-20260226
 stylist:
   model: gemini-2.0-flash
+captioner:
+  model: gemini-2.0-flash
 polish:
   model: gemini-3.1-flash-image-preview-20260226
 retriever:

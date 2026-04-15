@@ -6,7 +6,7 @@ import logging
 from pathlib import Path
 from typing import AsyncGenerator, Optional
 
-from agents import planner, visualizer, stylist, critic
+from agents import captioner, critic, planner, stylist, visualizer
 from retriever.embedder import ensure_index, search
 
 logger = logging.getLogger(__name__)
@@ -59,6 +59,24 @@ async def _run_retriever(data: dict, api_key: str) -> list[dict]:
     ref_lookup = {r["id"]: r for r in refs}
 
     return _enrich_examples_with_images(matches, ref_lookup)
+
+
+async def suggest_caption(content: str, api_key: str) -> str:
+    """Propose a figure caption from methodology + retrieved reference captions.
+
+    Runs the retriever with content as the query (no intent yet), then asks the
+    captioner to synthesize a caption using the top-N reference captions as
+    style anchors.
+
+    Args:
+        content: methodology section text
+        api_key: Gemini API key
+
+    Returns:
+        Caption string starting with 'Figure 1:'.
+    """
+    examples = await _run_retriever({"content": content, "visual_intent": ""}, api_key)
+    return await captioner.run(content=content, examples=examples, api_key=api_key)
 
 
 async def _run_critic_loop(
