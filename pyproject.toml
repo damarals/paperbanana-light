@@ -1,0 +1,16 @@
+[project]
+name = "paperbanana-v2"
+version = "0.1.0"
+description = "Academic figure generation with Agno agents"
+requires-python = ">=3.12"
+dependencies = [
+    "agno",
+    "chromadb",
+    "dash",
+    "dash-bootstrap-components",
+    "google-genai",
+    "pillow",
+    "pydantic",
+    "python-dotenv",
+    "pyyaml",
+]

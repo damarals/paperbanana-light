@@ -1,0 +1,236 @@
+/* PaperBanana Dash UI -- custom styles */
+
+/* ---- Color-scheme + accent variables ---- */
+:root {
+    color-scheme: dark;
+    --pb-accent: #f59e0b;
+    --pb-accent-hover: #d97706;
+    --pb-accent-subtle: rgba(245, 158, 11, 0.12);
+}
+
+/* ---- Global tweaks ---- */
+body {
+    background-color: #222;
+}
+
+/* ---- Header banner ---- */
+.pb-header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 18px 24px;
+    border-radius: 12px;
+    border: 1px solid #444;
+    background: #2b2b2b;
+    margin-bottom: 20px;
+}
+.pb-header img {
+    height: 56px;
+    width: 56px;
+    border-radius: 10px;
+    object-fit: cover;
+}
+.pb-header-title {
+    font-size: 26px;
+    font-weight: 800;
+    color: #f0f0f0;
+    margin: 0;
+}
+.pb-header-badges {
+    display: flex;
+    gap: 6px;
+    margin-top: 4px;
+}
+.pb-badge {
+    display: inline-block;
+    padding: 3px 12px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 600;
+    background: var(--pb-accent);
+    color: #fff;
+}
+
+/* ---- Sidebar settings panel ---- */
+.pb-sidebar {
+    border: 1px solid #444;
+    border-radius: 12px;
+    padding: 20px 16px;
+    background: #2b2b2b;
+}
+.pb-sidebar .pb-section-label {
+    text-transform: uppercase;
+    font-weight: 700;
+    font-size: 13px;
+    letter-spacing: 1.5px;
+    color: var(--pb-accent);
+    margin-bottom: 12px;
+}
+
+/* ---- Main panel ---- */
+.pb-main {
+    border: 1px solid #444;
+    border-radius: 12px;
+    padding: 20px;
+    background: #2b2b2b;
+}
+
+/* ---- Form controls inside dark theme ---- */
+.pb-sidebar input,
+.pb-sidebar textarea,
+.pb-sidebar select,
+.pb-sidebar .Select-control,
+.pb-main input,
+.pb-main textarea,
+.pb-main select,
+.pb-main .Select-control {
+    background-color: #333 !important;
+    color: #e0e0e0 !important;
+    border-color: #555 !important;
+}
+.pb-sidebar label,
+.pb-main label {
+    color: #ccc !important;
+}
+
+/* ---- Generate button ---- */
+.pb-generate-btn button {
+    background: linear-gradient(135deg, #f59e0b, #d97706) !important;
+    color: #fff !important;
+    border: none !important;
+    font-weight: 600 !important;
+    font-size: 16px !important;
+    border-radius: 10px !important;
+    padding: 12px 32px !important;
+    width: 100%;
+    cursor: pointer;
+}
+.pb-generate-btn button:hover {
+    background: linear-gradient(135deg, #d97706, #b45309) !important;
+}
+.pb-generate-btn button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+.pb-generate-btn button:focus-visible {
+    outline: 2px solid var(--pb-accent);
+    outline-offset: 2px;
+}
+
+/* ---- Status box ---- */
+.pb-status {
+    border: 1px solid #444;
+    border-radius: 8px;
+    padding: 10px 16px;
+    background: #333;
+    font-size: 14px;
+    color: #ccc;
+    min-height: 40px;
+}
+
+/* ---- Results gallery ---- */
+.pb-gallery {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 16px;
+    padding: 8px 0;
+}
+.pb-candidate-card {
+    border: 2px solid var(--pb-accent);
+    border-radius: 12px;
+    padding: 10px;
+    text-align: center;
+    background: #333;
+}
+.pb-candidate-card img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 8px;
+}
+.pb-candidate-label {
+    font-weight: 600;
+    color: var(--pb-accent);
+    margin: 8px 0 4px 0;
+    font-size: 14px;
+}
+
+/* ---- Download link styled as button ---- */
+.pb-download-btn {
+    display: inline-block;
+    padding: 6px 16px;
+    border-radius: 8px;
+    border: 1px solid var(--pb-accent);
+    color: var(--pb-accent) !important;
+    font-size: 13px;
+    font-weight: 600;
+    text-decoration: none;
+    margin-top: 6px;
+    cursor: pointer;
+}
+.pb-download-btn:hover {
+    background: var(--pb-accent-subtle);
+    text-decoration: none;
+}
+.pb-download-btn:focus-visible {
+    outline: 2px solid var(--pb-accent);
+    outline-offset: 2px;
+}
+
+/* ---- Empty state ---- */
+.pb-empty-state {
+    text-align: center;
+    padding: 48px 16px;
+    color: #888;
+    font-size: 15px;
+}
+
+/* ---- Section labels ---- */
+.pb-section-label {
+    text-transform: uppercase;
+    font-weight: 700;
+    font-size: 13px;
+    letter-spacing: 1.5px;
+    color: var(--pb-accent);
+    margin-bottom: 8px;
+}
+
+/* ---- Spinner ---- */
+.pb-spinner {
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    border: 2px solid #888;
+    border-top-color: var(--pb-accent);
+    border-radius: 50%;
+    animation: pb-spin 0.8s linear infinite;
+    vertical-align: middle;
+    margin-right: 6px;
+}
+@keyframes pb-spin {
+    to { transform: rotate(360deg); }
+}
+
+/* ---- Tabular numbers for numeric displays ---- */
+.pb-tabular-nums {
+    font-variant-numeric: tabular-nums;
+}
+
+/* ---- Footer ---- */
+.pb-footer {
+    text-align: center;
+    padding: 16px 0;
+    font-size: 13px;
+    color: #6b7280;
+}
+.pb-footer a {
+    color: var(--pb-accent);
+    text-decoration: none;
+}
+.pb-footer a:hover {
+    text-decoration: underline;
+}
+
+/* ---- Prevent unwanted scrollbars on main container ---- */
+.container-fluid {
+    overflow-x: hidden;
+}
