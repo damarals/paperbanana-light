@@ -1,4 +1,4 @@
-"""PaperBanana Dash web interface for academic figure generation."""
+"""PaperBananaLight — academic diagram generation, editorial interface."""
 
 import asyncio
 import logging
@@ -6,7 +6,6 @@ import os
 import uuid
 
 import dash
-import dash_bootstrap_components as dbc
 from dash import Input, Output, State, callback, dcc, html, no_update
 from dotenv import load_dotenv
 
@@ -16,8 +15,11 @@ logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
 
 # ---------------------------------------------------------------------------
-# Example content (mirrors the original PaperBanana Gradio demo)
+# Constants
 # ---------------------------------------------------------------------------
+
+_API_KEY_FROM_ENV = os.environ.get("GOOGLE_API_KEY", "").strip()
+_HAS_ENV_KEY = bool(_API_KEY_FROM_ENV)
 
 EXAMPLE_METHOD = r"""## Methodology: The PaperBanana Framework
 
@@ -25,15 +27,14 @@ In this section, we present the architecture of PaperBanana, a reference-driven 
 
 ### Retriever Agent
 
-Given the source context $S$ and the communicative intent $C$, the Retriever Agent identifies $N$ most relevant examples $\mathcal{E} = \{E_n\}_{n=1}^{N} \subset \mathcal{R}$ from the fixed reference set $\mathcal{R}$ to guide the downstream agents. As defined in Section \ref{sec:task_formulation}, each example $E_i \in \mathcal{R}$ is a triplet $(S_i, C_i, I_i)$.
-To leverage the reasoning capabilities of VLMs, we adopt a generative retrieval approach where the VLM performs selection over candidate metadata:
+Given the source context $S$ and the communicative intent $C$, the Retriever Agent identifies $N$ most relevant examples $\mathcal{E} = \{E_n\}_{n=1}^{N} \subset \mathcal{R}$ from the fixed reference set $\mathcal{R}$ to guide the downstream agents.
 $$
 \mathcal{E} = \text{VLM}_{\text{Ret}} \left( S, C, \{ (S_i, C_i) \}_{E_i \in \mathcal{R}} \right)
 $$
 
 ### Planner Agent
 
-The Planner Agent serves as the cognitive core of the system. It takes the source context $S$, communicative intent $C$, and retrieved examples $\mathcal{E}$ as inputs:
+The Planner Agent serves as the cognitive core of the system:
 $$
 P = \text{VLM}_{\text{plan}}(S, C, \{ (S_i, C_i, I_i) \}_{E_i \in \mathcal{E}})
 $$
@@ -70,390 +71,294 @@ EXAMPLE_CAPTION = (
     "illustration."
 )
 
-PIPELINE_DESCRIPTIONS = {
-    "vanilla": "Direct image generation from content (no agents)",
-    "dev_planner": "Retriever -> Planner -> Visualizer",
-    "dev_planner_critic": "Retriever -> Planner -> Visualizer -> Critic -> Visualizer",
-    "demo_full": "Retriever -> Planner -> Stylist -> Visualizer -> Critic -> Visualizer",
-}
-
-PIPELINE_OPTIONS = [
-    {"label": f"{mode} -- {desc}", "value": mode}
-    for mode, desc in PIPELINE_DESCRIPTIONS.items()
-]
-
-ASPECT_RATIO_OPTIONS = [
-    {"label": "16:9 (widescreen)", "value": "16:9"},
-    {"label": "21:9 (ultrawide)", "value": "21:9"},
-    {"label": "3:2 (standard)", "value": "3:2"},
+ASPECT_OPTIONS = [
+    {"label": "16:9", "value": "16:9"},
+    {"label": "21:9", "value": "21:9"},
+    {"label": "3:2", "value": "3:2"},
 ]
 
 # ---------------------------------------------------------------------------
-# App setup
+# App
 # ---------------------------------------------------------------------------
 
 app = dash.Dash(
     __name__,
-    external_stylesheets=[dbc.themes.DARKLY],
-    title="PaperBanana",
+    external_stylesheets=[
+        "https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css",
+    ],
+    title="PaperBananaLight",
     suppress_callback_exceptions=True,
     meta_tags=[
         {"name": "viewport", "content": "width=device-width, initial-scale=1"},
+        {"name": "color-scheme", "content": "light"},
+        {"name": "theme-color", "content": "#FBF8F1"},
     ],
 )
 
-server = app.server  # for deployment (gunicorn, etc.)
+server = app.server
 
+app.index_string = """<!DOCTYPE html>
+<html data-theme="light" lang="en">
+<head>
+    {%metas%}
+    <title>{%title%}</title>
+    {%favicon%}
+    {%css%}
+</head>
+<body>
+    {%app_entry%}
+    <footer>{%config%}{%scripts%}{%renderer%}</footer>
+</body>
+</html>"""
 
 # ---------------------------------------------------------------------------
-# Layout helpers
+# Layout
 # ---------------------------------------------------------------------------
 
-def _build_header():
-    return html.Div(
+
+def _header():
+    return html.Header(
         className="pb-header",
         children=[
-            html.Img(
-                src=app.get_asset_url("logo.jpg"),
-                alt="PaperBanana logo",
-                height=56,
-                width=56,
-            ),
-            html.Div([
-                html.P("PaperBanana", className="pb-header-title"),
-                html.Div(
-                    className="pb-header-badges",
-                    children=[
-                        html.Span("Multi-Agent", className="pb-badge"),
-                        html.Span("Scientific Diagrams", className="pb-badge"),
-                    ],
-                ),
-            ]),
-        ],
-    )
-
-
-def _build_sidebar():
-    default_api_key = os.environ.get("GOOGLE_API_KEY", "")
-
-    return html.Div(
-        className="pb-sidebar",
-        children=[
-            html.P("Settings", className="pb-section-label"),
-
-            # API key
-            dbc.Label(
-                "Google API Key",
-                html_for="api-key-input",
-                style={"marginTop": "8px"},
-            ),
-            dbc.Input(
-                id="api-key-input",
-                type="password",
-                value=default_api_key,
-                placeholder="AIza...",
-                autocomplete="off",
-                spellCheck=False,
-            ),
-
-            html.Hr(style={"borderColor": "#444"}),
-
-            # Pipeline mode
-            dbc.Label("Pipeline Mode", html_for="pipeline-mode"),
-            dcc.Dropdown(
-                id="pipeline-mode",
-                options=PIPELINE_OPTIONS,
-                value="dev_planner_critic",
-                clearable=False,
-                style={"backgroundColor": "#333", "color": "#e0e0e0"},
-            ),
-
-            # Task type
-            dbc.Label(
-                "Task Type",
-                html_for="task-type",
-                style={"marginTop": "12px"},
-            ),
-            dcc.Dropdown(
-                id="task-type",
-                options=[
-                    {"label": "Diagram", "value": "diagram"},
-                    {"label": "Plot", "value": "plot"},
-                ],
-                value="diagram",
-                clearable=False,
-                style={"backgroundColor": "#333", "color": "#e0e0e0"},
-            ),
-
-            # Aspect ratio
-            dbc.Label(
-                "Aspect Ratio",
-                html_for="aspect-ratio",
-                style={"marginTop": "12px"},
-            ),
-            dcc.Dropdown(
-                id="aspect-ratio",
-                options=ASPECT_RATIO_OPTIONS,
-                value="16:9",
-                clearable=False,
-                style={"backgroundColor": "#333", "color": "#e0e0e0"},
-            ),
-
-            # Number of candidates
-            dbc.Label(
-                "Number of Candidates",
-                html_for="num-candidates",
-                style={"marginTop": "12px"},
-            ),
-            dbc.Input(
-                id="num-candidates",
-                type="number",
-                value=1,
-                min=1,
-                max=10,
-                step=1,
-                autocomplete="off",
-            ),
-
-            # Max critic rounds
-            dbc.Label(
-                "Max Critic Rounds",
-                html_for="max-critic-rounds",
-                style={"marginTop": "12px"},
-            ),
-            dcc.Slider(
-                id="max-critic-rounds",
-                min=0,
-                max=5,
-                step=1,
-                value=3,
-                marks={i: {"label": str(i), "style": {"color": "#ccc"}} for i in range(6)},
-            ),
-        ],
-    )
-
-
-def _build_main_area():
-    return html.Div(
-        className="pb-main",
-        children=[
-            html.P("Input", className="pb-section-label"),
-
-            # Method content
-            dbc.Label("Method Content", html_for="method-content"),
-            dbc.Textarea(
-                id="method-content",
-                value=EXAMPLE_METHOD,
-                placeholder="Paste your paper's methodology section here...",
-                style={
-                    "height": "220px",
-                    "backgroundColor": "#333",
-                    "color": "#e0e0e0",
-                    "borderColor": "#555",
-                },
-            ),
-
-            # Figure caption
-            dbc.Label(
-                "Figure Caption",
-                html_for="figure-caption",
-                style={"marginTop": "12px"},
-            ),
-            dbc.Textarea(
-                id="figure-caption",
-                value=EXAMPLE_CAPTION,
-                placeholder="Describe the desired figure content and intent...",
-                style={
-                    "height": "100px",
-                    "backgroundColor": "#333",
-                    "color": "#e0e0e0",
-                    "borderColor": "#555",
-                },
-            ),
-
-            # Generate button
             html.Div(
-                className="pb-generate-btn",
-                style={"marginTop": "16px"},
+                className="pb-title-group",
                 children=[
-                    dbc.Button(
-                        "Generate Candidates",
-                        id="generate-btn",
-                        color="warning",
-                        size="lg",
-                        style={"width": "100%"},
+                    html.H1("PaperBananaLight", className="pb-header-title"),
+                    html.P(
+                        "Multi-agent academic diagram generation",
+                        className="pb-header-sub",
                     ),
                 ],
             ),
-
-            # Status
-            html.Div(
-                id="status-text",
-                className="pb-status",
-                style={"marginTop": "16px"},
-                children="Ready. Configure settings and press Generate Candidates.",
-            ),
-
-            html.Hr(style={"borderColor": "#444"}),
-
-            # Results section
-            html.P("Results", className="pb-section-label"),
-            html.Div(
-                id="results-gallery",
-                children=html.Div(
-                    className="pb-empty-state",
-                    children="No results yet. Generate candidates to see them here.",
-                ),
-            ),
-
-            # Hidden stores
-            dcc.Store(id="results-store", data=[]),
-            dcc.Store(id="run-id-store", data=""),
-            # Interval for polling long-running tasks
-            dcc.Interval(
-                id="poll-interval",
-                interval=2000,
-                n_intervals=0,
-                disabled=True,
-            ),
         ],
     )
 
 
-# ---------------------------------------------------------------------------
-# Full layout
-# ---------------------------------------------------------------------------
+def _api_key_section():
+    if _HAS_ENV_KEY:
+        return html.Div(className="pb-api-configured", children=[
+            html.Label("API Key", htmlFor="api-key-input"),
+            html.Div(className="pb-api-status", children=[
+                html.Span("Configured via .env", className="pb-api-badge-ok"),
+            ]),
+            dcc.Input(
+                id="api-key-input",
+                type="hidden",
+                value=_API_KEY_FROM_ENV,
+            ),
+        ])
 
-app.layout = dbc.Container(
-    fluid=True,
-    style={"maxWidth": "1400px", "paddingTop": "20px", "paddingBottom": "40px"},
-    children=[
-        _build_header(),
-        dbc.Row(
-            [
-                dbc.Col(
-                    _build_sidebar(),
-                    xs=12, md=4, lg=3,
-                    style={"marginBottom": "16px"},
-                ),
-                dbc.Col(
-                    _build_main_area(),
-                    xs=12, md=8, lg=9,
-                ),
-            ],
+    return html.Div(children=[
+        html.Label("Google API Key", htmlFor="api-key-input"),
+        dcc.Input(
+            id="api-key-input",
+            type="password",
+            value="",
+            placeholder="AIza...",
+            autoComplete="off",
+            className="pb-input",
         ),
-        html.Div(
-            className="pb-footer",
-            children=[
-                html.Span("PaperBanana "),
-                html.A(
-                    "Paper",
-                    href="https://arxiv.org/abs/2601.23265",
-                    target="_blank",
-                ),
-                html.Span(" | "),
-                html.A(
-                    "GitHub",
-                    href="https://github.com/dwzhu-pku/PaperBanana",
-                    target="_blank",
-                ),
-            ],
+        html.Small(
+            "Required. Set GOOGLE_API_KEY in .env to skip this.",
+            className="pb-helper-text",
         ),
-    ],
-)
+    ])
+
+
+def _sidebar():
+    return html.Article(children=[
+        html.H2("Configuration", className="pb-section-label"),
+
+        _api_key_section(),
+
+        html.Hr(),
+
+        # Aspect ratio
+        html.Label("Aspect Ratio", htmlFor="aspect-ratio"),
+        dcc.Dropdown(
+            id="aspect-ratio",
+            value="16:9",
+            options=ASPECT_OPTIONS,
+            clearable=False,
+            className="pb-dropdown",
+        ),
+
+        # Candidates
+        html.Label("Candidates", htmlFor="num-candidates"),
+        dcc.Slider(
+            id="num-candidates",
+            min=1,
+            max=10,
+            step=1,
+            value=1,
+            marks={i: str(i) for i in range(1, 11)},
+            className="pb-slider",
+        ),
+
+        # Critic rounds
+        html.Label(
+            ["Critic Rounds: ", html.Output(id="critic-rounds-value", children="3")],
+            htmlFor="max-critic-rounds",
+        ),
+        dcc.Slider(
+            id="max-critic-rounds",
+            min=0,
+            max=5,
+            step=1,
+            value=3,
+            marks={i: str(i) for i in range(6)},
+            className="pb-slider",
+        ),
+    ])
+
+
+def _main():
+    return html.Article(
+        className="pb-main-card",
+        children=[
+            html.H2("Input", className="pb-section-label"),
+
+            html.Label("Method Content", htmlFor="method-content"),
+            dcc.Textarea(
+                id="method-content",
+                value=EXAMPLE_METHOD,
+                placeholder="Paste your methodology section here...",
+                rows=12,
+                className="pb-textarea",
+            ),
+
+            html.Label("Figure Caption", htmlFor="figure-caption"),
+            dcc.Textarea(
+                id="figure-caption",
+                value=EXAMPLE_CAPTION,
+                placeholder="Describe the diagram you want to generate...",
+                rows=4,
+                className="pb-textarea",
+            ),
+
+            html.Button(
+                "Generate Candidates",
+                id="generate-btn",
+                className="pb-generate-btn",
+            ),
+
+            html.P(
+                id="status-text",
+                className="pb-status",
+                children="Ready.",
+                **{"aria-busy": "false"},
+            ),
+
+            html.Hr(),
+
+            html.H2("Results", className="pb-section-label"),
+            html.Div(
+                id="results-gallery",
+                children=html.P(
+                    "Your generated diagrams will appear here.",
+                    className="pb-empty-state",
+                ),
+            ),
+
+            # Stores
+            dcc.Store(id="results-store", data=[]),
+            dcc.Store(id="run-id-store", data=""),
+            dcc.Interval(id="poll-interval", interval=2000, n_intervals=0, disabled=True),
+        ],
+    )
+
+
+app.layout = html.Div(children=[
+    _header(),
+    html.Div(
+        className="pb-layout",
+        children=[
+            html.Aside(className="pb-sidebar", children=[_sidebar()]),
+            html.Section(children=[_main()]),
+        ],
+    ),
+    html.Footer(
+        className="pb-footer",
+        children=html.Small([
+            "PaperBananaLight  ",
+            html.A("Paper", href="https://arxiv.org/abs/2601.23265", target="_blank"),
+            "  |  ",
+            html.A("GitHub", href="https://github.com/dwzhu-pku/PaperBanana", target="_blank"),
+        ]),
+    ),
+])
 
 
 # ---------------------------------------------------------------------------
-# Pipeline execution (runs async pipeline in a thread-safe way)
+# Pipeline execution
 # ---------------------------------------------------------------------------
 
-# In-memory store for background task results keyed by run_id.
 _background_results: dict[str, dict] = {}
 
+PIPELINE_MODE = "demo_full"
+TASK_TYPE = "diagram"
 
-def _extract_final_image(result: dict, task_name: str, mode: str) -> str | None:
-    """Extract the best final image (base64 JPEG) from a pipeline result dict."""
-    if mode == "vanilla":
-        return result.get(f"vanilla_{task_name}_base64_jpg")
 
-    # Try critic rounds in reverse order (best refinement first)
+def _extract_final_image(result: dict) -> str | None:
     for r in range(5, -1, -1):
-        key = f"target_{task_name}_critic_desc{r}_base64_jpg"
+        key = f"target_diagram_critic_desc{r}_base64_jpg"
         if key in result and result[key]:
             return result[key]
-
-    # Fall back to stylist or planner image
-    if mode == "demo_full":
-        key = f"target_{task_name}_stylist_desc0_base64_jpg"
-    else:
-        key = f"target_{task_name}_desc0_base64_jpg"
-    return result.get(key)
+    return result.get("target_diagram_stylist_desc0_base64_jpg")
 
 
-def _run_generation(
-    api_key: str,
-    mode: str,
-    task_type: str,
-    aspect_ratio: str,
-    num_candidates: int,
-    max_critic_rounds: int,
-    method_content: str,
-    figure_caption: str,
-    run_id: str,
-):
-    """Execute pipeline in a background thread, storing results when done."""
+def _run_generation(api_key, aspect_ratio, num_candidates, max_critic_rounds,
+                    method_content, figure_caption, run_id):
     from pipeline import run_batch
 
-    data_list = []
-    for i in range(num_candidates):
-        data_list.append({
-            "task_name": task_type,
+    data_list = [
+        {
+            "task_name": TASK_TYPE,
             "content": method_content,
             "visual_intent": figure_caption,
             "filename": f"candidate_{i}",
             "additional_info": {"rounded_ratio": aspect_ratio},
-        })
+        }
+        for i in range(num_candidates)
+    ]
 
-    async def _async_run():
+    async def _go():
         images = []
-        async for result in run_batch(
-            data_list,
-            mode=mode,
-            api_key=api_key,
-            max_critic_rounds=max_critic_rounds,
-        ):
-            img_b64 = _extract_final_image(result, task_type, mode)
-            if img_b64:
-                images.append(img_b64)
+        async for result in run_batch(data_list, mode=PIPELINE_MODE, api_key=api_key,
+                                      max_critic_rounds=max_critic_rounds):
+            img = _extract_final_image(result)
+            if img:
+                images.append(img)
         return images
 
     try:
         loop = asyncio.new_event_loop()
-        images = loop.run_until_complete(_async_run())
+        images = loop.run_until_complete(_go())
         loop.close()
         _background_results[run_id] = {"status": "done", "images": images}
     except Exception as exc:
-        logger.exception("Pipeline failed for run %s", run_id)
-        _background_results[run_id] = {
-            "status": "error",
-            "error": f"{type(exc).__name__}: {exc}",
-            "images": [],
-        }
+        logger.exception("Pipeline failed: %s", run_id)
+        _background_results[run_id] = {"status": "error", "error": str(exc), "images": []}
 
 
 # ---------------------------------------------------------------------------
 # Callbacks
 # ---------------------------------------------------------------------------
 
+@callback(Output("critic-rounds-value", "children"), Input("max-critic-rounds", "value"))
+def update_slider(value):
+    return str(value)
+
+
 @callback(
     Output("status-text", "children"),
+    Output("status-text", "className"),
+    Output("status-text", "aria-busy"),
     Output("generate-btn", "disabled"),
     Output("run-id-store", "data"),
     Output("poll-interval", "disabled"),
     Input("generate-btn", "n_clicks"),
     State("api-key-input", "value"),
-    State("pipeline-mode", "value"),
-    State("task-type", "value"),
     State("aspect-ratio", "value"),
     State("num-candidates", "value"),
     State("max-critic-rounds", "value"),
@@ -461,78 +366,47 @@ def _run_generation(
     State("figure-caption", "value"),
     prevent_initial_call=True,
 )
-def start_generation(
-    n_clicks,
-    api_key,
-    mode,
-    task_type,
-    aspect_ratio,
-    num_candidates,
-    max_critic_rounds,
-    method_content,
-    figure_caption,
-):
-    """Validate inputs, launch background pipeline, enable polling."""
+def start_generation(n_clicks, api_key, aspect_ratio, num_candidates,
+                     max_critic_rounds, method_content, figure_caption):
+    err = lambda msg: (msg, "pb-status pb-status-error", "false", False, no_update, True)
+
     if not api_key or not api_key.strip():
-        return (
-            "Error: Please provide a Google API Key in the settings sidebar.",
-            False,
-            no_update,
-            True,
-        )
-
+        return err("Enter your Google API Key in the sidebar.")
     if not method_content or not method_content.strip():
-        return (
-            "Error: Method Content is required. Paste your methodology text.",
-            False,
-            no_update,
-            True,
-        )
-
+        return err("Paste your methodology text above.")
     if not figure_caption or not figure_caption.strip():
-        return (
-            "Error: Figure Caption is required. Describe the desired figure.",
-            False,
-            no_update,
-            True,
-        )
+        return err("Describe the diagram you want to generate.")
 
     num_candidates = max(1, min(10, int(num_candidates or 1)))
     max_critic_rounds = max(0, min(5, int(max_critic_rounds or 3)))
-
     run_id = uuid.uuid4().hex
+
     _background_results[run_id] = {"status": "running", "images": []}
 
     import threading
-    thread = threading.Thread(
+    threading.Thread(
         target=_run_generation,
-        args=(
-            api_key.strip(),
-            mode,
-            task_type,
-            aspect_ratio,
-            num_candidates,
-            max_critic_rounds,
-            method_content.strip(),
-            figure_caption.strip(),
-            run_id,
-        ),
+        args=(api_key.strip(), aspect_ratio, num_candidates,
+              max_critic_rounds, method_content.strip(), figure_caption.strip(), run_id),
         daemon=True,
+    ).start()
+
+    return (
+        f"Generating {num_candidates} candidate(s)...",
+        "pb-status pb-status-busy",
+        "true",
+        True,
+        run_id,
+        False,
     )
-    thread.start()
-
-    status_content = html.Span([
-        html.Span(className="pb-spinner"),
-        f"Generating {num_candidates} candidate(s) with {mode} pipeline...",
-    ])
-
-    return status_content, True, run_id, False
 
 
 @callback(
     Output("results-gallery", "children"),
     Output("results-store", "data"),
     Output("status-text", "children", allow_duplicate=True),
+    Output("status-text", "className", allow_duplicate=True),
+    Output("status-text", "aria-busy", allow_duplicate=True),
     Output("generate-btn", "disabled", allow_duplicate=True),
     Output("poll-interval", "disabled", allow_duplicate=True),
     Input("poll-interval", "n_intervals"),
@@ -540,85 +414,61 @@ def start_generation(
     prevent_initial_call=True,
 )
 def poll_results(n_intervals, run_id):
-    """Poll background task and update gallery when done."""
+    noop = (no_update,) * 7
+
     if not run_id or run_id not in _background_results:
-        return no_update, no_update, no_update, no_update, no_update
-
+        return noop
     result = _background_results[run_id]
-
     if result["status"] == "running":
-        return no_update, no_update, no_update, no_update, no_update
+        return noop
 
-    # Task finished -- stop polling and clean up
     _background_results.pop(run_id, None)
 
     if result["status"] == "error":
-        error_msg = result.get("error", "Unknown error occurred.")
+        msg = result.get("error", "Unknown error")
         return (
-            html.Div(
-                className="pb-empty-state",
-                children=f"Generation failed: {error_msg}. Check your API key and try again.",
-            ),
-            [],
-            f"Error: {error_msg}. Check your API key and settings, then try again.",
-            False,
-            True,
+            html.P(f"Failed: {msg}. Check API key and retry.", className="pb-empty-state"),
+            [], f"Error: {msg}", "pb-status pb-status-error", "false", False, True,
         )
 
-    # Success
     images = result.get("images", [])
-
     if not images:
         return (
-            html.Div(
-                className="pb-empty-state",
-                children="Generation completed but no images were produced. Try a different pipeline mode or input.",
-            ),
-            [],
-            "Completed, but no images were generated. Try different settings.",
-            False,
-            True,
+            html.P("No diagrams produced. Try different input.", className="pb-empty-state"),
+            [], "Done, but no diagrams generated.", "pb-status", "false", False, True,
         )
 
-    # Build gallery cards
     cards = []
-    for idx, img_b64 in enumerate(images):
-        data_uri = f"data:image/jpeg;base64,{img_b64}"
+    for i, img_b64 in enumerate(images):
+        uri = f"data:image/jpeg;base64,{img_b64}"
         cards.append(
-            html.Div(
+            html.Article(
                 className="pb-candidate-card",
                 children=[
-                    html.P(
-                        f"Candidate {idx + 1}",
-                        className="pb-candidate-label",
-                    ),
-                    html.Img(
-                        src=data_uri,
-                        alt=f"Generated candidate {idx + 1}",
-                        style={"maxWidth": "100%", "height": "auto"},
-                        width=400,
-                    ),
-                    html.A(
-                        "Download",
-                        href=data_uri,
-                        download=f"paperbanana_candidate_{idx + 1}.jpg",
-                        className="pb-download-btn",
-                        role="button",
-                        **{"aria-label": f"Download candidate {idx + 1}"},
-                    ),
+                    html.H3(f"Candidate {i + 1}", className="pb-candidate-label"),
+                    html.Img(src=uri, alt=f"Candidate {i + 1}", width=400, height=225,
+                             style={"width": "100%", "height": "auto"}),
+                    html.A("Download", href=uri, download=f"paperbanana_{i + 1}.jpg",
+                           className="pb-download-btn",
+                           **{"aria-label": f"Download candidate {i + 1}"}),
                 ],
             )
         )
 
-    gallery = html.Div(className="pb-gallery", children=cards)
-    count = len(images)
-    status_msg = f"Done! Generated {count} candidate(s) successfully."
-
-    return gallery, [True] * count, status_msg, False, True
+    n = len(images)
+    return (
+        html.Div(className="pb-gallery", children=cards),
+        [True] * n,
+        f"Done! {n} candidate(s) generated.",
+        "pb-status",
+        "false",
+        False,
+        True,
+    )
 
 
 # ---------------------------------------------------------------------------
-# Entry point
+# Entry
 # ---------------------------------------------------------------------------
 
 if __name__ == "__main__":

@@ -1,236 +1,586 @@
-/* PaperBanana Dash UI -- custom styles */
+/* PaperBananaLight — The Academic Atelier
+   Editorial warmth meets Swiss precision. */
 
-/* ---- Color-scheme + accent variables ---- */
-:root {
-    color-scheme: dark;
-    --pb-accent: #f59e0b;
-    --pb-accent-hover: #d97706;
-    --pb-accent-subtle: rgba(245, 158, 11, 0.12);
+/* ================================================================
+   PICO OVERRIDES — warm light theme
+   ================================================================ */
+
+:root[data-theme="light"] {
+    --pico-primary: #C47A0A;
+    --pico-primary-hover: #A86608;
+    --pico-primary-focus: rgba(196, 122, 10, 0.15);
+    --pico-primary-inverse: #FFFDF7;
+
+    --pico-background-color: #FBF8F1;
+    --pico-card-background-color: #FFFFFF;
+    --pico-card-border-color: #E8DFD0;
+    --pico-card-sectioning-background-color: #F5F0E8;
+
+    --pico-color: #1A1612;
+    --pico-muted-color: #7A7064;
+    --pico-muted-border-color: #DDD5C8;
+
+    --pico-form-element-background-color: #FFFFFF;
+    --pico-form-element-border-color: #D5CBBB;
+    --pico-form-element-color: #1A1612;
+    --pico-form-element-placeholder-color: #A69E90;
+    --pico-form-element-focus-color: #C47A0A;
+
+    --pico-font-family: "IBM Plex Sans", system-ui, -apple-system, sans-serif;
+    --pico-font-size: 100%;
+    --pico-line-height: 1.65;
+    --pico-border-radius: 8px;
+
+    color-scheme: light;
 }
 
-/* ---- Global tweaks ---- */
+/* ================================================================
+   TYPOGRAPHY
+   ================================================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,500;0,9..144,700;0,9..144,900;1,9..144,400&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap');
+
+h1, h2, h3, h4, h5, h6 {
+    font-family: "Fraunces", Georgia, serif;
+    font-weight: 700;
+    color: #1A1612;
+    letter-spacing: -0.01em;
+}
+
+code, kbd, pre, samp {
+    font-family: "IBM Plex Mono", monospace;
+}
+
+/* ================================================================
+   PAGE CANVAS — subtle paper grain
+   ================================================================ */
+
 body {
-    background-color: #222;
+    background-color: #FBF8F1;
+    background-image: url("data:image/svg+xml,%3Csvg width='200' height='200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.022'/%3E%3C/svg%3E");
+    min-height: 100dvh;
 }
 
-/* ---- Header banner ---- */
+/* ================================================================
+   LAYOUT — asymmetric editorial grid
+   ================================================================ */
+
+.pb-layout {
+    display: grid;
+    grid-template-columns: 280px 1fr;
+    gap: 32px;
+    align-items: start;
+    max-width: 1180px;
+    margin: 0 auto;
+    padding: 0 24px;
+}
+
+@media (max-width: 860px) {
+    .pb-layout {
+        grid-template-columns: 1fr;
+        gap: 20px;
+    }
+}
+
+/* ================================================================
+   HEADER — journal masthead
+   ================================================================ */
+
 .pb-header {
     display: flex;
     align-items: center;
-    gap: 16px;
-    padding: 18px 24px;
+    gap: 20px;
+    padding: 28px 24px 20px;
+    max-width: 1180px;
+    margin: 0 auto;
+    border-bottom: 1px solid #E8DFD0;
+    margin-bottom: 32px;
+}
+
+.pb-logo {
+    width: 52px;
+    height: 52px;
     border-radius: 12px;
-    border: 1px solid #444;
-    background: #2b2b2b;
-    margin-bottom: 20px;
-}
-.pb-header img {
-    height: 56px;
-    width: 56px;
-    border-radius: 10px;
     object-fit: cover;
+    box-shadow:
+        0 1px 3px rgba(26, 22, 18, 0.06),
+        0 4px 12px rgba(26, 22, 18, 0.04);
 }
+
+.pb-title-group {
+    flex: 1;
+}
+
 .pb-header-title {
-    font-size: 26px;
-    font-weight: 800;
-    color: #f0f0f0;
+    font-family: "Fraunces", Georgia, serif;
+    font-size: clamp(1.5rem, 3vw, 2rem);
+    font-weight: 900;
+    color: #1A1612;
     margin: 0;
+    line-height: 1.1;
+    letter-spacing: -0.025em;
 }
+
+.pb-header-sub {
+    font-family: "IBM Plex Sans", sans-serif;
+    font-size: 0.82rem;
+    color: #7A7064;
+    margin-top: 3px;
+    font-weight: 400;
+    letter-spacing: 0.04em;
+}
+
 .pb-header-badges {
     display: flex;
     gap: 6px;
-    margin-top: 4px;
+    margin-top: 6px;
 }
+
 .pb-badge {
     display: inline-block;
-    padding: 3px 12px;
-    border-radius: 12px;
-    font-size: 11px;
+    padding: 2px 10px;
+    border-radius: 999px;
+    font-size: 0.65rem;
     font-weight: 600;
-    background: var(--pb-accent);
-    color: #fff;
-}
-
-/* ---- Sidebar settings panel ---- */
-.pb-sidebar {
-    border: 1px solid #444;
-    border-radius: 12px;
-    padding: 20px 16px;
-    background: #2b2b2b;
-}
-.pb-sidebar .pb-section-label {
+    font-family: "IBM Plex Sans", sans-serif;
     text-transform: uppercase;
-    font-weight: 700;
-    font-size: 13px;
-    letter-spacing: 1.5px;
-    color: var(--pb-accent);
-    margin-bottom: 12px;
+    letter-spacing: 0.08em;
+    background: #F5EDD8;
+    color: #8B6914;
+    border: 1px solid #E8D9B4;
 }
 
-/* ---- Main panel ---- */
-.pb-main {
-    border: 1px solid #444;
+/* ================================================================
+   SIDEBAR — settings panel
+   ================================================================ */
+
+.pb-sidebar article {
+    background: #FFFFFF;
+    border: 1px solid #E8DFD0;
     border-radius: 12px;
-    padding: 20px;
-    background: #2b2b2b;
+    padding: 24px 20px;
+    box-shadow:
+        0 1px 2px rgba(26, 22, 18, 0.04),
+        0 4px 16px rgba(26, 22, 18, 0.03);
+    position: sticky;
+    top: 24px;
 }
 
-/* ---- Form controls inside dark theme ---- */
-.pb-sidebar input,
-.pb-sidebar textarea,
-.pb-sidebar select,
-.pb-sidebar .Select-control,
-.pb-main input,
-.pb-main textarea,
-.pb-main select,
-.pb-main .Select-control {
-    background-color: #333 !important;
-    color: #e0e0e0 !important;
-    border-color: #555 !important;
-}
-.pb-sidebar label,
-.pb-main label {
-    color: #ccc !important;
+.pb-section-label {
+    font-family: "IBM Plex Sans", sans-serif;
+    text-transform: uppercase;
+    font-weight: 600;
+    font-size: 0.68rem;
+    letter-spacing: 0.12em;
+    color: #C47A0A;
+    margin-bottom: 16px;
+    padding-bottom: 8px;
+    border-bottom: 2px solid #F5EDD8;
 }
 
-/* ---- Generate button ---- */
-.pb-generate-btn button {
-    background: linear-gradient(135deg, #f59e0b, #d97706) !important;
-    color: #fff !important;
-    border: none !important;
+.pb-sidebar label {
+    font-family: "IBM Plex Sans", sans-serif;
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: #4A4238;
+    margin-bottom: 4px;
+}
+
+.pb-sidebar hr {
+    border-color: #EDE6D8;
+    margin: 16px 0;
+}
+
+/* Dropdown dark overrides for light theme */
+.pb-dropdown .Select-control {
+    background-color: #FFFFFF !important;
+    border-color: #D5CBBB !important;
+    border-radius: 8px !important;
+    color: #1A1612 !important;
+    font-family: "IBM Plex Sans", sans-serif !important;
+    font-size: 0.85rem !important;
+}
+
+.pb-dropdown .Select-value-label,
+.pb-dropdown .Select-placeholder {
+    color: #1A1612 !important;
+    font-family: "IBM Plex Sans", sans-serif !important;
+}
+
+.pb-dropdown .Select-menu-outer {
+    background-color: #FFFFFF !important;
+    border-color: #D5CBBB !important;
+    border-radius: 0 0 8px 8px !important;
+    box-shadow: 0 8px 24px rgba(26, 22, 18, 0.1) !important;
+}
+
+.pb-dropdown .Select-option {
+    background-color: #FFFFFF !important;
+    color: #1A1612 !important;
+    font-family: "IBM Plex Sans", sans-serif !important;
+    font-size: 0.85rem !important;
+}
+
+.pb-dropdown .Select-option.is-focused {
+    background-color: #F5EDD8 !important;
+}
+
+.pb-dropdown .Select-option.is-selected {
+    background-color: #F5EDD8 !important;
     font-weight: 600 !important;
-    font-size: 16px !important;
-    border-radius: 10px !important;
-    padding: 12px 32px !important;
-    width: 100%;
-    cursor: pointer;
-}
-.pb-generate-btn button:hover {
-    background: linear-gradient(135deg, #d97706, #b45309) !important;
-}
-.pb-generate-btn button:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-}
-.pb-generate-btn button:focus-visible {
-    outline: 2px solid var(--pb-accent);
-    outline-offset: 2px;
 }
 
-/* ---- Status box ---- */
-.pb-status {
-    border: 1px solid #444;
+/* Dash dcc.Input fix — Dash wraps <input> in a div, Pico styles raw <input> */
+.pb-sidebar input,
+.pb-main-card input {
+    font-family: "IBM Plex Sans", sans-serif;
+    font-size: 0.85rem;
     border-radius: 8px;
-    padding: 10px 16px;
-    background: #333;
-    font-size: 14px;
-    color: #ccc;
-    min-height: 40px;
+    background-color: #FFFFFF;
+    border: 1px solid #D5CBBB;
+    color: #1A1612;
+    padding: 8px 12px;
+    width: 100%;
+    box-sizing: border-box;
+    transition: border-color 200ms ease-out, box-shadow 200ms ease-out;
 }
 
-/* ---- Results gallery ---- */
+.pb-sidebar input:focus,
+.pb-main-card input:focus {
+    border-color: #C47A0A;
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(196, 122, 10, 0.12);
+}
+
+.pb-sidebar input::placeholder {
+    color: #A69E90;
+}
+
+/* Dash slider overrides */
+.pb-slider .rc-slider-rail {
+    background-color: #E8DFD0 !important;
+    height: 6px !important;
+}
+
+.pb-slider .rc-slider-track {
+    background-color: #C47A0A !important;
+    height: 6px !important;
+}
+
+.pb-slider .rc-slider-handle {
+    border-color: #C47A0A !important;
+    background-color: #FFFFFF !important;
+    width: 18px !important;
+    height: 18px !important;
+    margin-top: -6px !important;
+    box-shadow: 0 1px 4px rgba(26, 22, 18, 0.15) !important;
+    opacity: 1 !important;
+}
+
+.pb-slider .rc-slider-handle:hover,
+.pb-slider .rc-slider-handle:focus {
+    border-color: #A86608 !important;
+    box-shadow: 0 0 0 3px rgba(196, 122, 10, 0.15) !important;
+}
+
+.pb-slider .rc-slider-mark-text {
+    font-family: "IBM Plex Sans", sans-serif !important;
+    font-size: 0.7rem !important;
+    color: #7A7064 !important;
+}
+
+.pb-slider .rc-slider-dot-active {
+    border-color: #C47A0A !important;
+}
+
+/* API key configured state */
+.pb-api-configured {
+    margin-bottom: 4px;
+}
+
+.pb-api-badge-ok {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 6px;
+    font-family: "IBM Plex Sans", sans-serif;
+    font-size: 0.75rem;
+    font-weight: 600;
+    background: #E8F5E2;
+    color: #2D6A1E;
+    border: 1px solid #C5E4BB;
+}
+
+.pb-api-status {
+    margin-top: 4px;
+}
+
+/* Helper text */
+.pb-helper-text {
+    display: block;
+    font-family: "IBM Plex Sans", sans-serif;
+    font-size: 0.72rem;
+    color: #A69E90;
+    margin-top: 4px;
+    font-style: italic;
+}
+
+/* ================================================================
+   MAIN CONTENT — editorial workspace
+   ================================================================ */
+
+.pb-main-card {
+    background: #FFFFFF;
+    border: 1px solid #E8DFD0;
+    border-radius: 12px;
+    padding: 32px 28px;
+    box-shadow:
+        0 1px 2px rgba(26, 22, 18, 0.04),
+        0 4px 16px rgba(26, 22, 18, 0.03);
+}
+
+.pb-main-card label {
+    font-family: "IBM Plex Sans", sans-serif;
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: #4A4238;
+}
+
+.pb-main-card hr {
+    border-color: #EDE6D8;
+    margin: 28px 0;
+}
+
+/* Textarea styling */
+.pb-textarea textarea {
+    background-color: #FEFCF7;
+    border: 1px solid #D5CBBB;
+    border-radius: 8px;
+    padding: 14px 16px;
+    font-family: "IBM Plex Sans", sans-serif;
+    font-size: 0.88rem;
+    line-height: 1.65;
+    color: #1A1612;
+    width: 100%;
+    resize: vertical;
+    transition: border-color 200ms ease-out, box-shadow 200ms ease-out;
+}
+
+.pb-textarea textarea::placeholder {
+    color: #A69E90;
+    font-style: italic;
+}
+
+.pb-textarea textarea:focus {
+    border-color: #C47A0A;
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(196, 122, 10, 0.12);
+}
+
+/* ================================================================
+   GENERATE BUTTON — warm amber gradient
+   ================================================================ */
+
+.pb-generate-btn {
+    width: 100%;
+    padding: 14px 32px;
+    font-family: "IBM Plex Sans", sans-serif;
+    font-weight: 600;
+    font-size: 0.95rem;
+    letter-spacing: 0.02em;
+    color: #FFFDF7;
+    background: linear-gradient(135deg, #D4860B 0%, #B8720A 50%, #C47A0A 100%);
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    box-shadow:
+        0 2px 4px rgba(196, 122, 10, 0.2),
+        0 8px 24px rgba(196, 122, 10, 0.12);
+    transition: transform 150ms ease-out, box-shadow 200ms ease-out;
+    position: relative;
+    overflow: hidden;
+}
+
+.pb-generate-btn::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, rgba(255,255,255,0.12) 0%, transparent 60%);
+    pointer-events: none;
+}
+
+.pb-generate-btn:hover {
+    transform: translateY(-1px);
+    box-shadow:
+        0 4px 8px rgba(196, 122, 10, 0.25),
+        0 12px 32px rgba(196, 122, 10, 0.15);
+}
+
+.pb-generate-btn:active {
+    transform: translateY(0) scale(0.98);
+    box-shadow:
+        0 1px 2px rgba(196, 122, 10, 0.2);
+}
+
+.pb-generate-btn:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+.pb-generate-btn:focus-visible {
+    outline: 3px solid #C47A0A;
+    outline-offset: 3px;
+}
+
+/* ================================================================
+   STATUS
+   ================================================================ */
+
+.pb-status {
+    padding: 12px 18px;
+    border-radius: 8px;
+    background: #F5F0E8;
+    font-family: "IBM Plex Sans", sans-serif;
+    font-size: 0.82rem;
+    color: #7A7064;
+    min-height: 40px;
+    border-left: 3px solid #E8DFD0;
+    transition: border-color 200ms ease-out, background-color 200ms ease-out;
+}
+
+.pb-status-busy {
+    border-left-color: #C47A0A;
+    background: #FDF6E9;
+    color: #8B6914;
+}
+
+.pb-status-error {
+    border-left-color: #D44A4A;
+    background: #FDF0EF;
+    color: #943030;
+}
+
+/* ================================================================
+   RESULTS GALLERY
+   ================================================================ */
+
 .pb-gallery {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-    gap: 16px;
-    padding: 8px 0;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 20px;
 }
+
 .pb-candidate-card {
-    border: 2px solid var(--pb-accent);
+    background: #FFFFFF;
+    border: 1px solid #E8DFD0;
     border-radius: 12px;
-    padding: 10px;
+    padding: 16px;
     text-align: center;
-    background: #333;
+    box-shadow: 0 2px 8px rgba(26, 22, 18, 0.04);
+    transition: box-shadow 250ms ease-out, transform 250ms ease-out;
 }
+
+.pb-candidate-card:hover {
+    box-shadow:
+        0 4px 12px rgba(26, 22, 18, 0.06),
+        0 12px 32px rgba(26, 22, 18, 0.04);
+    transform: translateY(-2px);
+}
+
 .pb-candidate-card img {
     max-width: 100%;
     height: auto;
     border-radius: 8px;
-}
-.pb-candidate-label {
-    font-weight: 600;
-    color: var(--pb-accent);
-    margin: 8px 0 4px 0;
-    font-size: 14px;
+    border: 1px solid #EDE6D8;
 }
 
-/* ---- Download link styled as button ---- */
+.pb-candidate-label {
+    font-family: "Fraunces", Georgia, serif;
+    font-weight: 700;
+    color: #C47A0A;
+    margin: 12px 0 6px;
+    font-size: 0.95rem;
+}
+
+/* Download button */
 .pb-download-btn {
     display: inline-block;
-    padding: 6px 16px;
+    padding: 8px 20px;
     border-radius: 8px;
-    border: 1px solid var(--pb-accent);
-    color: var(--pb-accent) !important;
-    font-size: 13px;
+    border: 1.5px solid #C47A0A;
+    color: #C47A0A;
+    font-family: "IBM Plex Sans", sans-serif;
+    font-size: 0.78rem;
     font-weight: 600;
     text-decoration: none;
-    margin-top: 6px;
+    letter-spacing: 0.03em;
+    margin-top: 8px;
     cursor: pointer;
+    transition: background-color 200ms ease-out, color 200ms ease-out;
 }
+
 .pb-download-btn:hover {
-    background: var(--pb-accent-subtle);
+    background: #C47A0A;
+    color: #FFFDF7;
     text-decoration: none;
 }
+
 .pb-download-btn:focus-visible {
-    outline: 2px solid var(--pb-accent);
+    outline: 3px solid #C47A0A;
     outline-offset: 2px;
 }
 
-/* ---- Empty state ---- */
+/* ================================================================
+   EMPTY STATE
+   ================================================================ */
+
 .pb-empty-state {
     text-align: center;
-    padding: 48px 16px;
-    color: #888;
-    font-size: 15px;
+    padding: 56px 24px;
+    color: #A69E90;
+    font-size: 0.9rem;
+    font-style: italic;
 }
 
-/* ---- Section labels ---- */
-.pb-section-label {
-    text-transform: uppercase;
-    font-weight: 700;
-    font-size: 13px;
-    letter-spacing: 1.5px;
-    color: var(--pb-accent);
-    margin-bottom: 8px;
-}
+/* ================================================================
+   FOOTER
+   ================================================================ */
 
-/* ---- Spinner ---- */
-.pb-spinner {
-    display: inline-block;
-    width: 16px;
-    height: 16px;
-    border: 2px solid #888;
-    border-top-color: var(--pb-accent);
-    border-radius: 50%;
-    animation: pb-spin 0.8s linear infinite;
-    vertical-align: middle;
-    margin-right: 6px;
-}
-@keyframes pb-spin {
-    to { transform: rotate(360deg); }
-}
-
-/* ---- Tabular numbers for numeric displays ---- */
-.pb-tabular-nums {
-    font-variant-numeric: tabular-nums;
-}
-
-/* ---- Footer ---- */
 .pb-footer {
     text-align: center;
-    padding: 16px 0;
-    font-size: 13px;
-    color: #6b7280;
+    padding: 24px 0 16px;
+    font-size: 0.75rem;
+    color: #A69E90;
+    border-top: 1px solid #E8DFD0;
+    margin-top: 48px;
+    max-width: 1180px;
+    margin-left: auto;
+    margin-right: auto;
 }
+
 .pb-footer a {
-    color: var(--pb-accent);
+    color: #C47A0A;
     text-decoration: none;
+    font-weight: 500;
 }
+
 .pb-footer a:hover {
     text-decoration: underline;
 }
 
-/* ---- Prevent unwanted scrollbars on main container ---- */
-.container-fluid {
+/* ================================================================
+   PREVENT HORIZONTAL OVERFLOW
+   ================================================================ */
+
+body > div {
     overflow-x: hidden;
+}
+
+/* ================================================================
+   TABULAR NUMBERS
+   ================================================================ */
+
+.pb-tabular-nums {
+    font-variant-numeric: tabular-nums;
 }

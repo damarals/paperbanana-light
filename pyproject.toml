@@ -7,10 +7,13 @@ dependencies = [
     "agno",
     "chromadb",
     "dash",
-    "dash-bootstrap-components",
     "google-genai",
     "pillow",
     "pydantic",
     "python-dotenv",
     "pyyaml",
+    "json-repair",
 ]
+
+[tool.setuptools.packages.find]
+include = ["agents*", "retriever*", "eval*"]
